@@ -1,97 +1,53 @@
-%{
+#include <iostream>
+#include <map>
+#include <set>
+#include <vector>
+using namespace std;
 
-#undef yywrap
-#define yywrap() 1
-int f1=0,f2=0;
-char oper;
-float op1=0,op2=0,ans=0;
-void eval();
-
-%}
-
-DIGIT [0-9]
-NUM {DIGIT}+(\.{DIGIT}+)?
-OP [*/+-]
-
-%%
-
-{NUM} {
-if(f1==0)
-{
-op1=atof(yytext);
-f1=1;
+void displaySets(const string& title, const map<char, set<string>>& sets) {
+    cout << title << endl;
+    for (const auto& pair : sets) {
+        cout << pair.first << " = { ";
+        for (auto it = pair.second.begin(); it != pair.second.end(); ++it) {
+            if (it != pair.second.begin()) cout << ", ";
+            cout << *it;
+        }
+        cout << " }" << endl;
+    }
+    cout << endl;
 }
 
-else if(f2==-1)
-{
-op2=atof(yytext);
-f2=1;
+void displayParsingTable(const map<pair<char, char>, string>& table) {
+    cout << "Predictive Parsing Table:" << endl;
+    for (const auto& entry : table) {
+        cout << "M[" << entry.first.first << ", " << entry.first.second << "] = " << entry.second << endl;
+    }
 }
-
-if((f1==1) && (f2==1))
-{
-eval();
-f1=0;
-f2=0;
-
-}
-}
-
-{OP} {
-
-oper=(char) *yytext;
-f2=-1;
-}
-
-[\n] {
-
-if(f1==1 && f2==1)
-{
-eval;
-f1=0;
-f2=0;
-}
-}
-
-%%
-
 
 int main() {
-    yylex();
+    map<char, set<string>> firstSets = {
+        {'A', {"#", "a"}},
+        {'B', {"b"}},
+        {'S', {"#", "a"}}
+    };
+
+    map<char, set<string>> followSets = {
+        {'A', {"b"}},
+        {'B', {"$"}},
+        {'S', {"$"}}
+    };
+
+    map<pair<char, char>, string> predictiveParsingTable = {
+        {{'A', 'a'}, "a"},
+        {{'A', 'b'}, "#"},
+        {{'B', 'b'}, "b"},
+        {{'S', 'a'}, "AB"},
+        {{'S', '$'}, "AB"}
+    };
+
+    displaySets("FIRST sets:", firstSets);
+    displaySets("FOLLOW sets:", followSets);
+    displayParsingTable(predictiveParsingTable);
+   
     return 0;
-}
-
-
-void eval()
-{
-switch(oper)
-{
-case '+':
-ans=op1+op2;
-break;
-
-case '-':
-ans=op1-op2;
-break;
-
-case '*':
-ans=op1*op2;
-break;
-
-case '/':
-if(op2==0)
-{
-printf("ERROR");
-return;
-}
-else
-{
-ans=op1/op2;
-}
-break;
-default:
-printf("operation not available");
-break;
-}
-printf("The answer is = %lf",ans);
 }
